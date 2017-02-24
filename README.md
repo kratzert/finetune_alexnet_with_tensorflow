@@ -1,6 +1,6 @@
 # Finetune AlexNet with Tensorflow 1.0
 
-This repository contains all the code needed to finetune [AlexNet](http://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks.pdf) on any arbitrary dataset. Beside the code documentation in the code I wrote and blog article you can fine [here](https://kratzert.github.io/2017/02/24/fine-tuning-alexnet-with-tensorflow.html) with further explanation.
+This repository contains all the code needed to finetune [AlexNet](http://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks.pdf) on any arbitrary dataset. Beside the code documentation in the code I wrote and blog article you can fine [here](https://kratzert.github.io/2017/02/24/finetuning-alexnet-with-tensorflow.html) with further explanation.
 
 All you need are the pretrained weights, which you can find [here](http://www.cs.toronto.edu/~guerzhoy/tf_alexnet/) or convert yourself from the caffe library using [caffe-to-tensorflow](https://github.com/ethereon/caffe-tensorflow).
 If you convert them on your own, take a look on the structure of the `.npy` weights file (dict of dicts or dict of lists).

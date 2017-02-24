@@ -2,6 +2,9 @@
 This is an TensorFLow implementation of AlexNet by Alex Krizhevsky at all 
 (http://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks.pdf)
 
+Following my blogpost at:
+https://kratzert.github.io/2017/02/24/finetuning-alexnet-with-tensorflow.html
+
 This script enables finetuning AlexNet on any given Dataset with any number of classes.
 The structure of this script is strongly inspired by the fast.ai Deep Learning
 class by Jeremy Howard and Rachel Thomas, especially their vgg16 finetuning

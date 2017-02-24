@@ -6,7 +6,7 @@ problem.
 This script was written for TensorFlow 1.0 and come with a blog post 
 you can find here:
   
-https://kratzert.github.io/2017/02/24/fine-tuning-alexnet-with-tensorflow.html  
+https://kratzert.github.io/2017/02/24/finetuning-alexnet-with-tensorflow.html
 
 Author: Frederik Kratzert 
 contact: f.kratzert(at)gmail.com
