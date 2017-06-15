@@ -1,110 +1,142 @@
+# Created on Wed May 31 14:48:46 2017
+#
+# @author: Frederik Kratzert
+
+"""Containes a helper class for image input pipelines in tensorflow."""
+
+import tensorflow as tf
 import numpy as np
-import cv2
 
-"""
-This code is highly influenced by the implementation of:
-https://github.com/joelthchao/tensorflow-finetune-flickr-style/dataset.py
-But changed abit to allow dataaugmentation (yet only horizontal flip) and 
-shuffling of the data. 
-The other source of inspiration is the ImageDataGenerator by @fchollet in the 
-Keras library. But as I needed BGR color format for fine-tuneing AlexNet I 
-wrote my own little generator.
-"""
+from tensorflow.contrib.data import Dataset
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework.ops import convert_to_tensor
 
-class ImageDataGenerator:
-    def __init__(self, class_list, horizontal_flip=False, shuffle=False, 
-                 mean = np.array([104., 117., 124.]), scale_size=(227, 227),
-                 nb_classes = 2):
-        
-                
-        # Init params
-        self.horizontal_flip = horizontal_flip
-        self.n_classes = nb_classes
-        self.shuffle = shuffle
-        self.mean = mean
-        self.scale_size = scale_size
-        self.pointer = 0
-        
-        self.read_class_list(class_list)
-        
-        if self.shuffle:
-            self.shuffle_data()
+VGG_MEAN = tf.constant([123.68, 116.779, 103.939], dtype=tf.float32)
 
-    def read_class_list(self,class_list):
+
+class ImageDataGenerator(object):
+    """Wrapper class around the new Tensorflows dataset pipeline.
+
+    Requires Tensorflow >= version 1.12rc0
+    """
+
+    def __init__(self, txt_file, mode, batch_size, num_classes, shuffle=True,
+                 buffer_size=1000):
+        """Create a new ImageDataGenerator.
+
+        Recieves a path string to a text file, which consists of many lines,
+        where each line has first a path string to an image and seperated by
+        a space an integer, referring to the class number. Using this data,
+        this class will create TensrFlow datasets, that can be used to train
+        e.g. a convolutional neural network.
+
+        Args:
+            txt_file: Path to the text file.
+            mode: Either 'training' or 'validation'. Depending on this value,
+                different parsing functions will be used.
+            batch_size: Number of images per batch.
+            num_classes: Number of classes in the dataset.
+            shuffle: Wether or not to shuffle the data in the dataset and the
+                initial file list.
+            buffer_size: Number of images used as buffer for TensorFlows
+                shuffling of the dataset.
+
+        Raises:
+            ValueError: If an invalid mode is passed.
+
         """
-        Scan the image file and get the image paths and labels
-        """
-        with open(class_list) as f:
-            lines = f.readlines()
-            self.images = []
-            self.labels = []
-            for l in lines:
-                items = l.split()
-                self.images.append(items[0])
-                self.labels.append(int(items[1]))
-            
-            #store total number of data
-            self.data_size = len(self.labels)
-        
-    def shuffle_data(self):
-        """
-        Random shuffle the images and labels
-        """
-        images = self.images.copy()
-        labels = self.labels.copy()
-        self.images = []
+        self.txt_file = txt_file
+        self.num_classes = num_classes
+
+        # retrieve the data from the text file
+        self._read_txt_file()
+
+        # number of samples in the dataset
+        self.data_size = len(self.labels)
+
+        # initial shuffling of the file and label lists (together!)
+        if shuffle:
+            self._shuffle_lists()
+
+        # convert lists to TF tensor
+        self.img_paths = convert_to_tensor(self.img_paths, dtype=dtypes.string)
+        self.labels = convert_to_tensor(self.labels, dtype=dtypes.int32)
+
+        # create dataset
+        data = Dataset.from_tensor_slices((self.img_paths, self.labels))
+
+        # distinguish between train/infer. when calling the parsing functions
+        if mode == 'training':
+            data = data.map(self._parse_function_train)
+
+        elif mode == 'inference':
+            data = data.map(self._parse_function_inference)
+
+        else:
+            raise ValueError("Invalid mode '%s'." % (mode))
+
+        # shuffle the first `buffer_size` elements of the dataset
+        if shuffle:
+            data = data.shuffle(buffer_size=buffer_size)
+
+        # create a new dataset with batches of images
+        data = data.batch(batch_size)
+
+        self.data = data
+
+    def _read_txt_file(self):
+        """Read the content of the text file and store it into lists."""
+        self.img_paths = []
         self.labels = []
-        
-        #create list of permutated index and shuffle data accoding to list
-        idx = np.random.permutation(len(labels))
-        for i in idx:
-            self.images.append(images[i])
+        with open(self.txt_file, 'r') as f:
+            lines = f.readlines()
+            for line in lines:
+                items = line.split(' ')
+                self.img_paths.append(items[0])
+                self.labels.append(int(items[1]))
+
+    def _shuffle_lists(self):
+        """Conjoined shuffling of the list of paths and labels."""
+        path = self.img_paths
+        labels = self.labels
+        permutation = np.random.permutation(self.data_size)
+        self.img_paths = []
+        self.labels = []
+        for i in permutation:
+            self.img_paths.append(path[i])
             self.labels.append(labels[i])
-                
-    def reset_pointer(self):
-        """
-        reset pointer to begin of the list
-        """
-        self.pointer = 0
-        
-        if self.shuffle:
-            self.shuffle_data()
-        
-    
-    def next_batch(self, batch_size):
-        """
-        This function gets the next n ( = batch_size) images from the path list
-        and labels and loads the images into them into memory 
-        """
-        # Get next batch of image (path) and labels
-        paths = self.images[self.pointer:self.pointer + batch_size]
-        labels = self.labels[self.pointer:self.pointer + batch_size]
-        
-        #update pointer
-        self.pointer += batch_size
-        
-        # Read images
-        images = np.ndarray([batch_size, self.scale_size[0], self.scale_size[1], 3])
-        for i in range(len(paths)):
-            img = cv2.imread(paths[i])
-            
-            #flip image at random if flag is selected
-            if self.horizontal_flip and np.random.random() < 0.5:
-                img = cv2.flip(img, 1)
-            
-            #rescale image
-            img = cv2.resize(img, (self.scale_size[0], self.scale_size[1]))
-            img = img.astype(np.float32)
-            
-            #subtract mean
-            img -= self.mean
-                                                                 
-            images[i] = img
 
-        # Expand labels to one hot encoding
-        one_hot_labels = np.zeros((batch_size, self.n_classes))
-        for i in range(len(labels)):
-            one_hot_labels[i][labels[i]] = 1
+    def _parse_function_train(self, filename, label):
+        """Input parser for samples of the training set."""
+        # convert label number into one-hot-encoding
+        one_hot = tf.one_hot(label, self.num_classes)
 
-        #return array of images and labels
-        return images, one_hot_labels
+        # load and preprocess the image
+        img_string = tf.read_file(filename)
+        img_decoded = tf.image.decode_png(img_string, channels=3)
+        img_resized = tf.image.resize_images(img_decoded, [227, 227])
+        """
+        Dataaugmentation comes here.
+        """
+        img_centered = tf.subtract(img_resized, VGG_MEAN)
+
+        # RGB -> BGR
+        img_bgr = img_centered[:, :, ::-1]
+
+        return img_bgr, one_hot
+
+    def _parse_function_inference(self, filename, label):
+        """Input parser for samples of the validation/test set."""
+        # convert label number into one-hot-encoding
+        one_hot = tf.one_hot(label, self.num_classes)
+
+        # load and preprocess the image
+        img_string = tf.read_file(filename)
+        img_decoded = tf.image.decode_png(img_string, channels=3)
+        img_resized = tf.image.resize_images(img_decoded, [227, 227])
+        img_centered = tf.subtract(img_resized, VGG_MEAN)
+
+        # RGB -> BGR
+        img_bgr = img_centered[:, :, ::-1]
+
+        return img_bgr, one_hot

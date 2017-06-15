@@ -1,4 +1,8 @@
-# Finetune AlexNet with Tensorflow 1.0
+# Finetune AlexNet with Tensorflow
+
+**Update 15.06.2016**
+
+I revised the entire code base to work with the new input pipeline coming with TensorFlow >= version 1.12rc0. You can find an explanation of the new input pipeline in a new [blog post](https://kratzert.github.io/2017/06/15/example_of_tensorflows_new_input_pipeline.html). You can use this code as before for finetuning AlexNet on your own dataset, only the dependency of OpenCV isn't necessary anymore. The old code can be found in [this past commit](https://github.com/kratzert/finetune_alexnet_with_tensorflow/tree/5d751d62eb4d7149f4e3fd465febf8f07d4cea9d).
 
 This repository contains all the code needed to finetune [AlexNet](http://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks.pdf) on any arbitrary dataset. Beside the comments in the code itself, I also wrote an article which you can fine [here](https://kratzert.github.io/2017/02/24/finetuning-alexnet-with-tensorflow.html) with further explanation.
 
@@ -9,10 +13,10 @@ If you convert them on your own, take a look on the structure of the `.npy` weig
 
 ## Requirements
 
-- Python 3.5 (Didn't test but should run under 2.7 as well)
-- TensorFlow 1.0
+- Python 3
+- TensorFlow >= 1.12rc0
 - Numpy
-- OpenCV (If you want to use the provided ImageDataGenerator in `datagenerator.py`)
+
 
 ## TensorBoard support
 
@@ -22,7 +26,7 @@ The code has TensorFlows summaries implemented so that you can follow the traini
 
 - `alexnet.py`: Class with the graph definition of the AlexNet.
 - `finetune.py`: Script to run the finetuning process.
-- `datagenerator.py`: Some auxiliary class I wrote to load images into memory and provide batches of images with their labels on function call. Includes random shuffle and horizontal flipping.
+- `datagenerator.py`: Contains a wrapper class for the new input pipeline.
 - `caffe_classes.py`: List of the 1000 class names of ImageNet (copied from [here](http://www.cs.toronto.edu/~guerzhoy/tf_alexnet/)).
 - `validate_alexnet_on_imagenet.ipynb`: Notebook to test the correct implementation of AlexNet and the pretrained weights on some images from the ImageNet database.
 - `images/*`: contains three example images, needed for the notebook.
