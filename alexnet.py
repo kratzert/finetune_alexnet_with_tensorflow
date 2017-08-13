@@ -57,18 +57,18 @@ class AlexNet(object):
 
     def create(self):
         """Create the network graph."""
-        # 1st Layer: Conv (w ReLu) -> Pool -> Lrn
+        # 1st Layer: Conv (w ReLu) -> Lrn -> Pool
         conv1 = conv(self.X, 11, 11, 96, 4, 4, padding='VALID', name='conv1')
-        pool1 = max_pool(conv1, 3, 3, 2, 2, padding='VALID', name='pool1')
-        norm1 = lrn(pool1, 2, 2e-05, 0.75, name='norm1')
-
-        # 2nd Layer: Conv (w ReLu) -> Pool -> Lrn with 2 groups
-        conv2 = conv(norm1, 5, 5, 256, 1, 1, groups=2, name='conv2')
-        pool2 = max_pool(conv2, 3, 3, 2, 2, padding='VALID', name='pool2')
-        norm2 = lrn(pool2, 2, 2e-05, 0.75, name='norm2')
-
+        norm1 = lrn(conv1, 2, 2e-05, 0.75, name='norm1')
+        pool1 = max_pool(norm1, 3, 3, 2, 2, padding='VALID', name='pool1')
+        
+        # 2nd Layer: Conv (w ReLu)  -> Lrn -> Pool with 2 groups
+        conv2 = conv(pool1, 5, 5, 256, 1, 1, groups=2, name='conv2')
+        norm2 = lrn(conv2, 2, 2e-05, 0.75, name='norm2')
+        pool2 = max_pool(norm2, 3, 3, 2, 2, padding='VALID', name='pool2')
+        
         # 3rd Layer: Conv (w ReLu)
-        conv3 = conv(norm2, 3, 3, 384, 1, 1, name='conv3')
+        conv3 = conv(pool2, 3, 3, 384, 1, 1, name='conv3')
 
         # 4th Layer: Conv (w ReLu) splitted into two groups
         conv4 = conv(conv3, 3, 3, 384, 1, 1, groups=2, name='conv4')
