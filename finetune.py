@@ -27,8 +27,8 @@ Configuration Part.
 """
 
 # Path to the textfiles for the trainings and validation set
-train_file = '/home/frederik/fish_data/train.txt'
-val_file = '/home/frederik/fish_data/val.txt'
+train_file = '/path/to/train.txt'
+val_file = '/path/to/val.txt'
 
 # Learning params
 learning_rate = 0.01
