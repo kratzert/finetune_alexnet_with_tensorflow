@@ -67,10 +67,12 @@ class ImageDataGenerator(object):
 
         # distinguish between train/infer. when calling the parsing functions
         if mode == 'training':
-            data = data.map(self._parse_function_train)
+            data = data.map(self._parse_function_train, num_threads=8,
+                      output_buffer_size=100*batch_size)
 
         elif mode == 'inference':
-            data = data.map(self._parse_function_inference)
+            data = data.map(self._parse_function_inference, num_threads=8,
+                      output_buffer_size=100*batch_size)
 
         else:
             raise ValueError("Invalid mode '%s'." % (mode))
