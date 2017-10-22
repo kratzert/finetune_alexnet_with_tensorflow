@@ -11,7 +11,7 @@ from tensorflow.contrib.data import Dataset
 from tensorflow.python.framework import dtypes
 from tensorflow.python.framework.ops import convert_to_tensor
 
-VGG_MEAN = tf.constant([123.68, 116.779, 103.939], dtype=tf.float32)
+IMAGENET_MEAN = tf.constant([123.68, 116.779, 103.939], dtype=tf.float32)
 
 
 class ImageDataGenerator(object):
@@ -120,7 +120,7 @@ class ImageDataGenerator(object):
         """
         Dataaugmentation comes here.
         """
-        img_centered = tf.subtract(img_resized, VGG_MEAN)
+        img_centered = tf.subtract(img_resized, IMAGENET_MEAN)
 
         # RGB -> BGR
         img_bgr = img_centered[:, :, ::-1]
@@ -136,7 +136,7 @@ class ImageDataGenerator(object):
         img_string = tf.read_file(filename)
         img_decoded = tf.image.decode_png(img_string, channels=3)
         img_resized = tf.image.resize_images(img_decoded, [227, 227])
-        img_centered = tf.subtract(img_resized, VGG_MEAN)
+        img_centered = tf.subtract(img_resized, IMAGENET_MEAN)
 
         # RGB -> BGR
         img_bgr = img_centered[:, :, ::-1]
