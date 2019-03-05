@@ -63,16 +63,14 @@ class ImageDataGenerator(object):
         self.labels = convert_to_tensor(self.labels, dtype=dtypes.int32)
 
         # create dataset
-        data = Dataset.from_tensor_slices((self.img_paths, self.labels))
+        data = tf.data.Dataset.from_tensor_slices((self.img_paths, self.labels))
 
         # distinguish between train/infer. when calling the parsing functions
         if mode == 'training':
-            data = data.map(self._parse_function_train, num_threads=8,
-                      output_buffer_size=100*batch_size)
+            data = data.map(self._parse_function_train, num_parallel_calls=8).prefetch(100 * batch_size)
 
         elif mode == 'inference':
-            data = data.map(self._parse_function_inference, num_threads=8,
-                      output_buffer_size=100*batch_size)
+            data = data.map(self._parse_function_inference, num_parallel_calls=8).prefetch(100 * batch_size)
 
         else:
             raise ValueError("Invalid mode '%s'." % (mode))
